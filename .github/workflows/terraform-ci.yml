@@ -1,13 +1,11 @@
 name: Terraform CI/CD
 
 on:
-  pull_request:
-    branches:
-      - develop
-
   push:
     branches:
       - develop
+
+
 
 permissions:
   id-token: write    # <-- REQUIRED for GitHub OIDC
