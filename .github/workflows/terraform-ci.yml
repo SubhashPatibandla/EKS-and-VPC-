@@ -52,7 +52,6 @@ jobs:
   terraform-apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
     needs: terraform-plan     # <-- Ensures plan must succeed FIRST
 
     steps:
