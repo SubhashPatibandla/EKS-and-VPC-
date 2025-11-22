@@ -1,9 +1,6 @@
 name: Terraform CI/CD
 
 on:
-  push:
-    branches:
-      - develop
   pull_request:
     types:
       - closed
@@ -20,7 +17,7 @@ jobs:
   terraform-plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event.pull_request.merged == true
 
     steps:
       - name: Checkout
