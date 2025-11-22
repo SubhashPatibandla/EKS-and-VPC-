@@ -9,6 +9,10 @@ on:
     branches:
       - develop
 
+permissions:
+  id-token: write    # <-- REQUIRED for GitHub OIDC
+  contents: read     # <-- REQUIRED to checkout code
+
 jobs:
 
   terraform-plan:
@@ -26,7 +30,7 @@ jobs:
       - name: Configure AWS credentials for OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-actions-terraform-role
+          role-to-assume: arn:aws:iam::223171131311:role/github-actions-terraform-role
           aws-region: ap-south-1
 
       - name: Terraform Init
