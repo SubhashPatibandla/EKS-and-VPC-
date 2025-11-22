@@ -1,0 +1,83 @@
+name: Terraform CI/CD
+
+on:
+  push:
+    branches:
+      - develop
+
+
+
+permissions:
+  id-token: write    # <-- REQUIRED for GitHub OIDC
+  contents: read     # <-- REQUIRED to checkout code
+
+jobs:
+
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials for OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::223171131311:role/github-actions-terraform-role
+          aws-region: ap-south-1
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Select or create workspace
+        run: |
+          terraform workspace select dev || terraform workspace new dev
+
+      - name: Terraform Plan
+        run: terraform plan -input=false -no-color -out=tfplan -var-file=dev.tfvars
+
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: tfplan
+
+
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: terraform-plan     # <-- Ensures plan must succeed FIRST
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials for OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-actions-terraform-role
+          aws-region: ap-south-1
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Select dev workspace
+        run: terraform workspace select dev
+
+      - name: Download Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: .
+
+      - name: Terraform Apply
+        run: terraform apply -input=false -auto-approve tfplan
